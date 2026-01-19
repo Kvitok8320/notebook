@@ -36,16 +36,21 @@ export async function GET(
         }),
         model.count(),
       ])
-    } catch (error) {
-      // Если createdAt нет, используем id
-      [data, total] = await Promise.all([
-        model.findMany({
-          skip,
-          take: ITEMS_PER_PAGE,
-          orderBy: { id: 'desc' },
-        }),
-        model.count(),
-      ])
+    } catch (error: any) {
+      // Если ошибка связана с createdAt, используем id
+      if (error?.message?.includes('createdAt') || error?.code === 'P2009') {
+        [data, total] = await Promise.all([
+          model.findMany({
+            skip,
+            take: ITEMS_PER_PAGE,
+            orderBy: { id: 'desc' },
+          }),
+          model.count(),
+        ])
+      } else {
+        // Другая ошибка - пробрасываем дальше
+        throw error
+      }
     }
 
     return NextResponse.json({

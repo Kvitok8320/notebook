@@ -45,12 +45,16 @@ export default function TableViewPage() {
       )
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to load data')
+        const errorMsg = errorData.details || errorData.error || 'Failed to load data'
+        console.error('API Error:', errorData)
+        throw new Error(errorMsg)
       }
       const data = await response.json()
       setTableData(data)
     } catch (err: any) {
-      setError(err.message || 'Failed to load table data')
+      const errorMsg = err.message || 'Failed to load table data'
+      console.error('Error loading table data:', err)
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -143,7 +147,7 @@ export default function TableViewPage() {
     )
   }
 
-  if (!tableData || tableData.data.length === 0) {
+  if (!tableData) {
     return (
       <div style={{ padding: '2rem' }}>
         <div
@@ -155,8 +159,51 @@ export default function TableViewPage() {
           }}
         >
           <h1 style={{ marginBottom: '1rem' }}>Таблица: {tableName}</h1>
-          <p>Таблица пуста</p>
+          {error ? (
+            <div style={{ color: '#ef4444', marginBottom: '1rem' }}>
+              <p><strong>Ошибка:</strong> {error}</p>
+            </div>
+          ) : (
+            <p>Загрузка данных...</p>
+          )}
           <Link href="/view-db" style={{ color: '#667eea' }}>
+            ← Вернуться к списку таблиц
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (tableData.data.length === 0) {
+    return (
+      <div style={{ padding: '2rem' }}>
+        <div
+          style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <h1 style={{ marginBottom: '1rem' }}>Таблица: {tableName}</h1>
+          <p>Таблица пуста (0 записей)</p>
+          <div style={{ marginTop: '1rem' }}>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600',
+              }}
+            >
+              + Создать первую запись
+            </button>
+          </div>
+          <Link href="/view-db" style={{ color: '#667eea', display: 'block', marginTop: '1rem' }}>
             ← Вернуться к списку таблиц
           </Link>
         </div>
