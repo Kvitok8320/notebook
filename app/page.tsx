@@ -37,9 +37,26 @@ export default async function Home() {
         >
           📓 Notebook App
         </h1>
-        <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>
+        <p style={{ color: '#666', marginBottom: '1rem', fontSize: '1.1rem' }}>
           Next.js + Prisma + NeonDB (PostgreSQL)
         </p>
+        <div style={{ marginBottom: '2rem' }}>
+          <a
+            href="/view-db"
+            style={{
+              display: 'inline-block',
+              padding: '0.75rem 1.5rem',
+              background: '#667eea',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontWeight: '600',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            🗄️ Database Viewer
+          </a>
+        </div>
 
         {notes.length === 0 ? (
           <div
