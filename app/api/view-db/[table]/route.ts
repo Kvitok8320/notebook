@@ -4,6 +4,44 @@ import { DB_TABLES } from '@/lib/db-tables'
 
 const ITEMS_PER_PAGE = 10
 
+// Вспомогательная функция для получения модели
+function getModel(modelName: string) {
+  // Prisma Client использует имена моделей в нижнем регистре
+  // Проверяем, что prisma объект существует
+  if (!prisma) {
+    throw new Error('Prisma Client is not initialized')
+  }
+  
+  const model = (prisma as any)[modelName]
+  
+  if (!model) {
+    // Получаем список доступных моделей для отладки
+    const allKeys = Object.keys(prisma)
+    const availableModels = allKeys.filter(
+      (key) => {
+        const value = (prisma as any)[key]
+        return (
+          typeof value === 'object' && 
+          value !== null &&
+          typeof value.findMany === 'function'
+        )
+      }
+    )
+    
+    console.error(`Model "${modelName}" not found in Prisma Client`)
+    console.error('All Prisma keys:', allKeys)
+    console.error('Available models:', availableModels)
+    
+    throw new Error(
+      `Model "${modelName}" not found. ` +
+      `Available models: ${availableModels.join(', ')}. ` +
+      `All keys: ${allKeys.join(', ')}`
+    )
+  }
+  
+  return model
+}
+
 // Получить данные таблицы с пагинацией
 export async function GET(
   request: NextRequest,
@@ -57,10 +95,16 @@ export async function GET(
         itemsPerPage: ITEMS_PER_PAGE,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching table data:', error)
+    const errorMessage = error?.message || String(error)
     return NextResponse.json(
-      { error: 'Failed to fetch table data', details: String(error) },
+      { 
+        error: 'Failed to fetch table data', 
+        details: errorMessage,
+        model: tableInfo?.model,
+        table: params.table
+      },
       { status: 500 }
     )
   }
@@ -79,10 +123,7 @@ export async function POST(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = (prisma as any)[tableInfo.model]
-    if (!model) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 })
-    }
+    const model = getModel(tableInfo.model)
 
     const created = await model.create({ data: body })
     return NextResponse.json({ data: created })
@@ -113,10 +154,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = (prisma as any)[tableInfo.model]
-    if (!model) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 })
-    }
+    const model = getModel(tableInfo.model)
 
     const updated = await model.update({
       where: { id },
@@ -150,10 +188,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = (prisma as any)[tableInfo.model]
-    if (!model) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 })
-    }
+    const model = getModel(tableInfo.model)
 
     await model.delete({ where: { id } })
     return NextResponse.json({ success: true })
