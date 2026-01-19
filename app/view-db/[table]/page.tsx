@@ -41,7 +41,13 @@ export default function TableViewPage() {
     setError(null)
     try {
       const response = await fetch(
-        `/api/view-db/${tableName}?page=${currentPage}`
+        `/api/view-db/${tableName}?page=${currentPage}&_t=${Date.now()}`,
+        {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        }
       )
       if (!response.ok) {
         const errorData = await response.json()
