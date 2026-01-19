@@ -1,46 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getPrismaModel } from '@/lib/prisma-models'
 import { DB_TABLES } from '@/lib/db-tables'
 
 const ITEMS_PER_PAGE = 10
-
-// Вспомогательная функция для получения модели
-function getModel(modelName: string) {
-  // Prisma Client использует имена моделей в нижнем регистре
-  // Проверяем, что prisma объект существует
-  if (!prisma) {
-    throw new Error('Prisma Client is not initialized')
-  }
-  
-  const model = (prisma as any)[modelName]
-  
-  if (!model) {
-    // Получаем список доступных моделей для отладки
-    const allKeys = Object.keys(prisma)
-    const availableModels = allKeys.filter(
-      (key) => {
-        const value = (prisma as any)[key]
-        return (
-          typeof value === 'object' && 
-          value !== null &&
-          typeof value.findMany === 'function'
-        )
-      }
-    )
-    
-    console.error(`Model "${modelName}" not found in Prisma Client`)
-    console.error('All Prisma keys:', allKeys)
-    console.error('Available models:', availableModels)
-    
-    throw new Error(
-      `Model "${modelName}" not found. ` +
-      `Available models: ${availableModels.join(', ')}. ` +
-      `All keys: ${allKeys.join(', ')}`
-    )
-  }
-  
-  return model
-}
 
 // Получить данные таблицы с пагинацией
 export async function GET(
@@ -123,7 +85,7 @@ export async function POST(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = getModel(tableInfo.model)
+    const model = getPrismaModel(params.table)
 
     const created = await model.create({ data: body })
     return NextResponse.json({ data: created })
@@ -154,7 +116,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = getModel(tableInfo.model)
+    const model = getPrismaModel(params.table)
 
     const updated = await model.update({
       where: { id },
@@ -188,7 +150,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = getModel(tableInfo.model)
+    const model = getPrismaModel(params.table)
 
     await model.delete({ where: { id } })
     return NextResponse.json({ success: true })
