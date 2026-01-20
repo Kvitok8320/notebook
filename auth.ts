@@ -25,21 +25,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user && user) {
         session.user.id = user.id
       }
-      if (process.env.NODE_ENV === "development") {
-        console.log("[Auth] Session callback:", { userId: user?.id, email: session.user?.email })
-      }
+      // Логирование для отладки на Vercel
+      console.log("[Auth] Session callback:", { 
+        userId: user?.id, 
+        email: session.user?.email,
+        hasSession: !!session 
+      })
       return session
     },
     async signIn({ user, account, profile }) {
       // Разрешаем вход для всех пользователей
-      if (process.env.NODE_ENV === "development") {
-        console.log("[Auth] SignIn callback:", { userId: user?.id, email: user?.email })
-      }
+      console.log("[Auth] SignIn callback:", { 
+        userId: user?.id, 
+        email: user?.email,
+        provider: account?.provider 
+      })
       return true
+    },
+    async redirect({ url, baseUrl }) {
+      // Убеждаемся, что редирект идет на правильный домен
+      console.log("[Auth] Redirect callback:", { url, baseUrl })
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // Включаем для отладки на Vercel
 })
 

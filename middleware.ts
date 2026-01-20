@@ -6,13 +6,17 @@ export default auth((req: NextRequest & { auth?: any }) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
 
-  // Отладка (только в development)
-  if (process.env.NODE_ENV === "development") {
-    console.log("[Middleware] Path:", pathname, "Auth:", !!req.auth, "User:", req.auth?.user?.email)
-  }
+  // Отладка (включая production для диагностики)
+  console.log("[Middleware] Path:", pathname, "Auth:", !!req.auth, "User:", req.auth?.user?.email)
 
   // Исключаем API routes и статические файлы из проверки
   if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next()
+  }
+
+  // Если это callback от OAuth, пропускаем без проверки
+  // NextAuth сам обработает callback и установит сессию
+  if (pathname.includes("/callback/")) {
     return NextResponse.next()
   }
 
