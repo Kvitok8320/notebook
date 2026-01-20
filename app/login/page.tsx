@@ -1,4 +1,3 @@
-import { signIn } from "@/auth"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -41,6 +40,7 @@ export default async function LoginPage({
         <form
           action={async () => {
             "use server"
+            const { signIn } = await import("@/auth")
             await signIn("google", {
               redirectTo: searchParams.callbackUrl || "/dashboard",
             })
