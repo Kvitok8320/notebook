@@ -17,6 +17,14 @@ export default async function DashboardPage({
   const userId = session.user.id
   const search = searchParams.search || ""
 
+  // Убеждаемся, что есть хотя бы одна категория
+  let defaultCategory = await prisma.category.findFirst()
+  if (!defaultCategory) {
+    defaultCategory = await prisma.category.create({
+      data: { category: "General" },
+    })
+  }
+
   // Получаем все промты пользователя
   const prompts = await prisma.prompt.findMany({
     where: {

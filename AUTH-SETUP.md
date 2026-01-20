@@ -13,6 +13,9 @@ AUTH_SECRET="your-secret-key-here"
 # Получите credentials на: https://console.cloud.google.com/apis/credentials
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Для продакшена (Vercel) - укажите URL вашего домена
+# AUTH_URL="https://yourdomain.com" (опционально, NextAuth определит автоматически)
 ```
 
 ## Настройка Google OAuth
@@ -25,13 +28,16 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 6. Добавьте Authorized redirect URIs:
    - `http://localhost:3000/api/auth/callback/google` (для разработки)
    - `http://127.0.0.1:3000/api/auth/callback/google` (альтернативный для разработки)
-   - `https://yourdomain.com/api/auth/callback/google` (для продакшена)
+   - `https://yourdomain.vercel.app/api/auth/callback/google` (для продакшена на Vercel)
+   - `https://yourdomain.com/api/auth/callback/google` (для кастомного домена)
    
    **ВАЖНО**: 
    - URI должен точно совпадать, включая протокол (http/https), домен и путь
    - Не добавляйте слэш в конце: `/api/auth/callback/google` ✅, `/api/auth/callback/google/` ❌
    - Проверьте, что порт правильный (обычно 3000 для разработки)
    - После добавления URI в Google Cloud Console может потребоваться несколько минут для применения изменений
+   - **Для Vercel**: Используйте URL вида `https://your-project.vercel.app/api/auth/callback/google`
+   - Можно добавить несколько redirect URIs для разных окружений (dev, staging, production)
 7. Скопируйте Client ID и Client Secret в `.env`
 
 ## Применение изменений схемы

@@ -24,8 +24,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session
     },
+    async signIn({ user, account, profile }) {
+      // Разрешаем вход для всех пользователей
+      return true
+    },
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,
+  debug: process.env.NODE_ENV === "development",
 })
 
