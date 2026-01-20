@@ -37,9 +37,14 @@ export default async function LoginPage({
           action={async () => {
             "use server"
             const { signIn } = await import("@/auth")
-            await signIn("google", {
-              redirectTo: searchParams.callbackUrl || "/dashboard",
-            })
+            try {
+              await signIn("google", {
+                redirectTo: searchParams.callbackUrl || "/dashboard",
+              })
+            } catch (error) {
+              console.error("SignIn error:", error)
+              throw error
+            }
           }}
         >
           <button

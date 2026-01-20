@@ -6,6 +6,11 @@ export default auth((req: NextRequest & { auth?: any }) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
 
+  // Отладка (только в development)
+  if (process.env.NODE_ENV === "development") {
+    console.log("[Middleware] Path:", pathname, "Auth:", !!req.auth, "User:", req.auth?.user?.email)
+  }
+
   // Исключаем API routes и статические файлы из проверки
   if (pathname.startsWith("/api/auth")) {
     return NextResponse.next()
@@ -24,6 +29,8 @@ export default auth((req: NextRequest & { auth?: any }) => {
 
   // Если пытается зайти на защищенный маршрут без авторизации
   if (isProtectedRoute && !isLoggedIn) {
+    // Проверяем, не идет ли это после callback от Google
+    // В этом случае даем немного времени на сохранение сессии
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(loginUrl)

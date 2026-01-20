@@ -10,8 +10,11 @@ export default async function DashboardPage({
 }) {
   const session = await auth()
 
+  // Middleware уже проверил авторизацию, но проверяем еще раз для безопасности
   if (!session?.user?.id) {
-    redirect("/login")
+    // Если нет сессии, редиректим на логин
+    // Это может произойти, если сессия еще не сохранилась после входа
+    redirect("/login?error=SessionNotFound")
   }
 
   const userId = session.user.id
