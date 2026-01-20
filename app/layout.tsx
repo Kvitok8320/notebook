@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Notebook App',
-  description: 'Minimal Next.js + Prisma + NeonDB app',
+  title: 'ProStore - Prompt Store',
+  description: 'Управление промтами с Next.js + Prisma + NeonDB',
 }
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body>{children}</body>
     </html>
   )
