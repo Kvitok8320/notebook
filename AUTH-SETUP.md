@@ -24,7 +24,14 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 5. Выберите "Web application"
 6. Добавьте Authorized redirect URIs:
    - `http://localhost:3000/api/auth/callback/google` (для разработки)
+   - `http://127.0.0.1:3000/api/auth/callback/google` (альтернативный для разработки)
    - `https://yourdomain.com/api/auth/callback/google` (для продакшена)
+   
+   **ВАЖНО**: 
+   - URI должен точно совпадать, включая протокол (http/https), домен и путь
+   - Не добавляйте слэш в конце: `/api/auth/callback/google` ✅, `/api/auth/callback/google/` ❌
+   - Проверьте, что порт правильный (обычно 3000 для разработки)
+   - После добавления URI в Google Cloud Console может потребоваться несколько минут для применения изменений
 7. Скопируйте Client ID и Client Secret в `.env`
 
 ## Применение изменений схемы
