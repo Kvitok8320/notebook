@@ -42,7 +42,7 @@ export default async function DashboardPage() {
               color: "#333",
             }}
           >
-            Добро пожаловать, {session.user.name || session.user.email}!
+            Добро пожаловать, {session.user.name || session.user.email || "User"}!
           </h1>
           {session.user.image && (
             <img
