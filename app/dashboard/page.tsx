@@ -11,11 +11,11 @@ export default async function DashboardPage() {
   }
 
   // Получаем статистику пользователя
-  const userId = (session.user.id || session.user.email) as string
-  
-  if (!userId) {
+  if (!session.user.id) {
     redirect("/login")
   }
+  
+  const userId = session.user.id
 
   const [promptsCount, notesCount, votesCount] = await Promise.all([
     prisma.prompt.count({ where: { ownerId: userId } }),

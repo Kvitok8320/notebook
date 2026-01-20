@@ -11,11 +11,11 @@ export default async function MyPromptsPage() {
     redirect("/login")
   }
 
-  const userId = (session.user.id || session.user.email) as string
-  
-  if (!userId) {
+  if (!session.user.id) {
     redirect("/login")
   }
+  
+  const userId = session.user.id
 
   // Получаем промты пользователя
   const prompts = await prisma.prompt.findMany({
