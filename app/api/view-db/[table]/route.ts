@@ -19,10 +19,7 @@ export async function GET(
       return NextResponse.json({ error: 'Table not found' }, { status: 404 })
     }
 
-    const model = (prisma as any)[tableInfo.model]
-    if (!model) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 })
-    }
+    const model = getPrismaModel(params.table)
 
     // Получаем данные с пагинацией
     // Пытаемся использовать createdAt для сортировки, если его нет - используем id
@@ -65,6 +62,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching table data:', error)
     const errorMessage = error?.message || String(error)
+    const tableInfo = DB_TABLES.find((t) => t.name === params.table)
     return NextResponse.json(
       { 
         error: 'Failed to fetch table data', 
