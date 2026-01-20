@@ -6,6 +6,11 @@ export default auth((req: NextRequest & { auth?: any }) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
 
+  // Исключаем API routes и статические файлы из проверки
+  if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next()
+  }
+
   // Защищенные маршруты
   const protectedRoutes = ["/dashboard", "/my-prompts"]
   const isProtectedRoute = protectedRoutes.some((route) =>
