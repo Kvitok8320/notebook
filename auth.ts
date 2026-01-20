@@ -38,8 +38,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("[Auth] SignIn callback:", { 
         userId: user?.id, 
         email: user?.email,
-        provider: account?.provider 
+        provider: account?.provider,
+        accountId: account?.id
       })
+      
+      // Проверяем, что пользователь будет создан/найден
+      if (!user?.email) {
+        console.error("[Auth] SignIn error: No email in user object")
+        return false
+      }
+      
       return true
     },
     async redirect({ url, baseUrl }) {

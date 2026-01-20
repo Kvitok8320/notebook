@@ -10,10 +10,17 @@ export default async function DashboardPage({
 }) {
   const session = await auth()
 
+  console.log("[Dashboard] Session check:", { 
+    hasSession: !!session, 
+    hasUser: !!session?.user, 
+    userId: session?.user?.id,
+    email: session?.user?.email 
+  })
+
   // Middleware уже проверил авторизацию, но проверяем еще раз для безопасности
   if (!session?.user?.id) {
+    console.log("[Dashboard] No session found, redirecting to login")
     // Если нет сессии, редиректим на логин
-    // Это может произойти, если сессия еще не сохранилась после входа
     redirect("/login?error=SessionNotFound")
   }
 

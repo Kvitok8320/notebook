@@ -16,7 +16,8 @@ export default auth((req: NextRequest & { auth?: any }) => {
 
   // Если это callback от OAuth, пропускаем без проверки
   // NextAuth сам обработает callback и установит сессию
-  if (pathname.includes("/callback/")) {
+  if (pathname.startsWith("/api/auth/callback")) {
+    console.log("[Middleware] OAuth callback detected, allowing through")
     return NextResponse.next()
   }
 
@@ -28,13 +29,13 @@ export default auth((req: NextRequest & { auth?: any }) => {
 
   // Если пользователь уже на странице логина и авторизован, редиректим на dashboard
   if (pathname === "/login" && isLoggedIn) {
+    console.log("[Middleware] User logged in, redirecting to dashboard")
     return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
   // Если пытается зайти на защищенный маршрут без авторизации
   if (isProtectedRoute && !isLoggedIn) {
-    // Проверяем, не идет ли это после callback от Google
-    // В этом случае даем немного времени на сохранение сессии
+    console.log("[Middleware] Protected route without auth, redirecting to login")
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(loginUrl)
