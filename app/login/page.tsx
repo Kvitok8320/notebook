@@ -6,12 +6,8 @@ export default async function LoginPage({
 }: {
   searchParams: { callbackUrl?: string }
 }) {
-  const session = await auth()
-
-  // Если уже авторизован, перенаправляем
-  if (session) {
-    redirect(searchParams.callbackUrl || "/dashboard")
-  }
+  // Проверка авторизации перенесена в middleware.ts
+  // чтобы избежать циклов редиректов
 
   return (
     <div style={{ padding: "2rem", maxWidth: "500px", margin: "0 auto" }}>

@@ -1,17 +1,12 @@
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth()
-
-  if (!session?.user) {
-    redirect("/login")
-  }
+  // Проверка авторизации уже выполняется в middleware.ts
+  // Не нужно дублировать проверку здесь, чтобы избежать циклов редиректов
 
   return (
     <div className="flex h-screen bg-background">
