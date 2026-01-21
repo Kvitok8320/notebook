@@ -6,7 +6,7 @@ import { PromptsList } from "@/components/prompts-list"
 export default async function PublicPromptsPage({
   searchParams,
 }: {
-  searchParams: { search?: string }
+  searchParams: { search?: string; sort?: string }
 }) {
   const session = await auth()
 
@@ -16,6 +16,7 @@ export default async function PublicPromptsPage({
 
   const userId = session.user.id
   const search = searchParams.search || ""
+  const sort = searchParams.sort || "recent"
 
   // Убеждаемся, что есть хотя бы одна категория
   let defaultCategory = await prisma.category.findFirst()
@@ -25,8 +26,8 @@ export default async function PublicPromptsPage({
     })
   }
 
-  // Получаем публичные промты пользователя
-  const prompts = await prisma.prompt.findMany({
+  // Получаем публичные промты пользователя с лайками
+  let prompts = await prisma.prompt.findMany({
     where: {
       ownerId: userId,
       isPublic: true,
@@ -40,10 +41,39 @@ export default async function PublicPromptsPage({
     },
     include: {
       category: true,
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+      votes: {
+        where: {
+          userId: userId,
+        },
+        select: {
+          id: true,
+        },
+      },
     },
-    orderBy: { updatedAt: "desc" },
-    take: 10,
+    orderBy: { createdAt: "desc" },
+    take: 50, // Берем больше для сортировки
   })
+
+  // Сортируем по популярности если нужно
+  if (sort === "popular") {
+    prompts = prompts.sort((a, b) => {
+      const aCount = a._count.votes
+      const bCount = b._count.votes
+      if (aCount !== bCount) {
+        return bCount - aCount
+      }
+      // Если количество лайков одинаковое, сортируем по дате
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  }
+
+  // Ограничиваем результат
+  prompts = prompts.slice(0, 10)
 
   return (
     <div className="p-6">
@@ -58,10 +88,13 @@ export default async function PublicPromptsPage({
           ...p,
           createdAt: new Date(p.createdAt),
           updatedAt: new Date(p.updatedAt),
+          likesCount: p._count.votes,
+          likedByMe: p.votes.length > 0,
         }))}
         userId={userId}
         filter="public"
         search={search}
+        sort={sort}
       />
     </div>
   )

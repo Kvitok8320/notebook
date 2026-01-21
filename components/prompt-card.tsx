@@ -12,6 +12,7 @@ import {
   MessageSquare,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { LikeButton } from "./like-button"
 
 interface PromptCardProps {
   prompt: {
@@ -23,6 +24,8 @@ interface PromptCardProps {
     isFavorite: boolean
     createdAt: Date
     updatedAt: Date
+    likesCount?: number
+    likedByMe?: boolean
   }
   onEdit: (id: string) => void
   onDelete: (id: string) => void
@@ -95,12 +98,21 @@ export function PromptCard({
         </div>
         <div className="mt-4 pt-3 border-t">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              Обновлено{" "}
-              {formatDistanceToNow(new Date(prompt.updatedAt), {
-                addSuffix: true,
-              })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Обновлено{" "}
+                {formatDistanceToNow(new Date(prompt.updatedAt), {
+                  addSuffix: true,
+                })}
+              </span>
+              {prompt.isPublic && (
+                <LikeButton
+                  promptId={prompt.id}
+                  initialLiked={prompt.likedByMe || false}
+                  initialCount={prompt.likesCount || 0}
+                />
+              )}
+            </div>
             <div className="flex gap-1 shrink-0">
               <Button
                 variant="ghost"

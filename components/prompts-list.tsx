@@ -5,7 +5,7 @@ import { PromptCard } from "./prompt-card"
 import { PromptDialog } from "./prompt-dialog"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, TrendingUp, Clock } from "lucide-react"
 import {
   createPrompt,
   updatePrompt,
@@ -30,6 +30,8 @@ interface Prompt {
     id: string
     category: string
   }
+  likesCount?: number
+  likedByMe?: boolean
 }
 
 interface PromptsListProps {
@@ -37,6 +39,7 @@ interface PromptsListProps {
   userId: string
   filter: "all" | "public" | "favorites"
   search?: string
+  sort?: string
 }
 
 export function PromptsList({
@@ -44,9 +47,11 @@ export function PromptsList({
   userId,
   filter,
   search: initialSearch = "",
+  sort: initialSort = "recent",
 }: PromptsListProps) {
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts)
   const [search, setSearch] = useState(initialSearch)
+  const [sort, setSort] = useState(initialSort)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null)
   const router = useRouter()
@@ -59,11 +64,15 @@ export function PromptsList({
   const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => {
-    if (debouncedSearch !== initialSearch) {
+    if (debouncedSearch !== initialSearch || sort !== initialSort) {
       const path = filter === "all" ? "/dashboard" : `/dashboard/${filter}`
-      router.push(`${path}?search=${encodeURIComponent(debouncedSearch)}`)
+      const params = new URLSearchParams()
+      if (debouncedSearch) params.set("search", debouncedSearch)
+      if (sort && sort !== "recent") params.set("sort", sort)
+      const query = params.toString()
+      router.push(`${path}${query ? `?${query}` : ""}`)
     }
-  }, [debouncedSearch, router, initialSearch, filter])
+  }, [debouncedSearch, sort, router, initialSearch, initialSort, filter])
 
   const handleCreate = async (data: {
     title: string
@@ -136,8 +145,8 @@ export function PromptsList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Поиск по названию или содержанию..."
@@ -146,6 +155,26 @@ export function PromptsList({
             className="pl-10"
           />
         </div>
+        {filter === "public" && (
+          <div className="flex gap-2">
+            <Button
+              variant={sort === "recent" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSort("recent")}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              По дате
+            </Button>
+            <Button
+              variant={sort === "popular" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSort("popular")}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Популярные
+            </Button>
+          </div>
+        )}
         <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Создать промт
