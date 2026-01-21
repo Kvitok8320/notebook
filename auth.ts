@@ -9,7 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true, // Разрешаем связывание аккаунтов по email
+      // allowDangerousEmailAccountLinking отключен - каждый Google аккаунт будет отдельным пользователем
     }),
   ],
   pages: {
