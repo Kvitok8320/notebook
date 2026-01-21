@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 
 const navItems = [
-  { href: "/dashboard", label: "Все промты", icon: MessageSquare },
+  { href: "/dashboard", label: "Мои промты", icon: MessageSquare },
   { href: "/dashboard/public", label: "Публичные", icon: Globe },
   { href: "/dashboard/favorites", label: "Избранное", icon: Star },
   { href: "/dashboard/history", label: "История", icon: History },
