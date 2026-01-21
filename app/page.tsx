@@ -1,145 +1,202 @@
-import { prisma } from '@/lib/prisma'
+import Link from "next/link"
+import { auth } from "@/auth"
+import { prisma } from "@/lib/prisma"
+import { Button } from "@/components/ui/button"
+import { PromptCardPublic } from "@/components/prompt-card-public"
+import { Plus, Sparkles, TrendingUp } from "lucide-react"
 
-async function getNotes() {
-  try {
-    const notes = await prisma.note.findMany({
-      orderBy: {
-        createdAt: 'desc',
+async function getRecentPrompts(userId: string | null) {
+  const prompts = await prisma.prompt.findMany({
+    where: {
+      isPublic: true,
+    },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
       },
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+      ...(userId && {
+        votes: {
+          where: {
+            userId: userId,
+          },
+          select: {
+            id: true,
+          },
+        },
+      }),
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 20,
+  })
+
+  return prompts.map((p) => ({
+    ...p,
+    createdAt: new Date(p.createdAt),
+    updatedAt: new Date(p.updatedAt),
+    likesCount: p._count.votes,
+    likedByMe: userId ? p.votes.length > 0 : false,
+  }))
+}
+
+async function getPopularPrompts(userId: string | null) {
+  // Получаем промты с подсчетом лайков
+  const prompts = await prisma.prompt.findMany({
+    where: {
+      isPublic: true,
+    },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+      ...(userId && {
+        votes: {
+          where: {
+            userId: userId,
+          },
+          select: {
+            id: true,
+          },
+        },
+      }),
+    },
+    take: 100, // Берем больше, чтобы отсортировать по лайкам
+  })
+
+  // Сортируем по количеству лайков (desc), затем по дате создания (desc)
+  const sortedPrompts = prompts
+    .map((p) => ({
+      ...p,
+      createdAt: new Date(p.createdAt),
+      updatedAt: new Date(p.updatedAt),
+      likesCount: p._count.votes,
+      likedByMe: userId ? p.votes.length > 0 : false,
+    }))
+    .sort((a, b) => {
+      // Сначала по количеству лайков
+      if (b.likesCount !== a.likesCount) {
+        return b.likesCount - a.likesCount
+      }
+      // Затем по дате создания
+      return b.createdAt.getTime() - a.createdAt.getTime()
     })
-    return notes
-  } catch (error) {
-    console.error('Error fetching notes:', error)
-    return []
-  }
+    .slice(0, 20) // Берем топ 20
+
+  return sortedPrompts
 }
 
 export default async function Home() {
-  const notes = await getNotes()
+  const session = await auth()
+  const userId = session?.user?.id || null
+
+  const [recentPrompts, popularPrompts] = await Promise.all([
+    getRecentPrompts(userId),
+    getPopularPrompts(userId),
+  ])
 
   return (
-    <main style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div
-        style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '2rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            color: '#333',
-          }}
-        >
-          📓 Notebook App
+    <div className="container mx-auto px-4 py-8">
+      {/* Hero-блок */}
+      <section className="text-center py-12 mb-12">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          Добро пожаловать в Notebook
         </h1>
-        <p style={{ color: '#666', marginBottom: '1rem', fontSize: '1.1rem' }}>
-          Next.js + Prisma + NeonDB (PostgreSQL)
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Коллекция лучших промтов для работы с AI. Создавайте, делитесь и
+          находите идеальные промты для ваших задач.
         </p>
-        <div style={{ marginBottom: '2rem' }}>
-          <a
-            href="/view-db"
-            style={{
-              display: 'inline-block',
-              padding: '0.75rem 1.5rem',
-              background: '#667eea',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            🗄️ Database Viewer
-          </a>
-        </div>
-
-        {notes.length === 0 ? (
-          <div
-            style={{
-              padding: '2rem',
-              textAlign: 'center',
-              color: '#999',
-              background: '#f5f5f5',
-              borderRadius: '8px',
-            }}
-          >
-            <p>No notes found. Run the seed script to add sample data.</p>
-            <code style={{ marginTop: '1rem', display: 'block' }}>
-              npm run db:seed
-            </code>
-          </div>
+        {session?.user ? (
+          <Link href="/dashboard">
+            <Button size="lg">
+              <Plus className="h-5 w-5 mr-2" />
+              Добавить промт
+            </Button>
+          </Link>
         ) : (
-          <div>
-            <h2
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#333',
-              }}
-            >
-              Notes ({notes.length})
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {notes.map((note) => (
-                <div
-                  key={note.id}
-                  style={{
-                    padding: '1.5rem',
-                    background: '#f9f9f9',
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0',
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: '1.2rem',
-                      fontWeight: '600',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                    }}
-                  >
-                    {note.title}
-                  </h3>
-                  <p style={{ color: '#999', fontSize: '0.9rem' }}>
-                    Created: {new Date(note.createdAt).toLocaleString()}
-                  </p>
-                  <p
-                    style={{
-                      color: '#666',
-                      fontSize: '0.85rem',
-                      fontFamily: 'monospace',
-                      marginTop: '0.5rem',
-                    }}
-                  >
-                    ID: {note.id}
-                  </p>
-                </div>
-              ))}
-            </div>
+          <div className="flex flex-col items-center gap-2">
+            <Link href="/login">
+              <Button size="lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Добавить промт
+              </Button>
+            </Link>
+            <p className="text-sm text-muted-foreground">
+              Войдите, чтобы добавлять промты
+            </p>
           </div>
         )}
+      </section>
 
-        <div
-          style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: '#e8f4f8',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            color: '#555',
-          }}
-        >
-          <strong>✅ Status:</strong> Database connection is working!{' '}
-          {notes.length > 0 && `Found ${notes.length} note(s).`}
+      {/* Секция "Новые" */}
+      <section className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="h-6 w-6 text-primary" />
+          <h2 className="text-3xl font-bold">Новые</h2>
         </div>
-      </div>
-    </main>
+        {recentPrompts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg mb-2">Пока нет публичных промтов</p>
+            <p className="text-sm">
+              Станьте первым, кто поделится своим промтом!
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {recentPrompts.map((prompt) => (
+              <PromptCardPublic
+                key={prompt.id}
+                prompt={prompt}
+                userId={userId}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Секция "Популярные" */}
+      <section className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <TrendingUp className="h-6 w-6 text-primary" />
+          <h2 className="text-3xl font-bold">Популярные</h2>
+        </div>
+        {popularPrompts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg mb-2">Пока нет популярных промтов</p>
+            <p className="text-sm">
+              Лайкайте промты, чтобы они стали популярными!
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {popularPrompts.map((prompt) => (
+              <PromptCardPublic
+                key={prompt.id}
+                prompt={prompt}
+                userId={userId}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   )
 }
-
