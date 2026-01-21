@@ -16,6 +16,7 @@
     "db:test": "tsx prisma/test-data.ts",
     "db:seed-full": "tsx prisma/seed-data.ts",
     "db:add-prompts": "tsx prisma/add-prompts.ts",
+    "db:check-users": "tsx prisma/check-users.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
