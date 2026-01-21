@@ -25,7 +25,7 @@ export default async function FavoritesPage({
     })
   }
 
-  // Получаем избранные промты пользователя
+  // Получаем избранные промты пользователя с лайками (для публичных промтов)
   const prompts = await prisma.prompt.findMany({
     where: {
       ownerId: userId,
@@ -40,6 +40,19 @@ export default async function FavoritesPage({
     },
     include: {
       category: true,
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+      votes: {
+        where: {
+          userId: userId,
+        },
+        select: {
+          id: true,
+        },
+      },
     },
     orderBy: { updatedAt: "desc" },
     take: 10,
@@ -58,6 +71,8 @@ export default async function FavoritesPage({
           ...p,
           createdAt: new Date(p.createdAt),
           updatedAt: new Date(p.updatedAt),
+          likesCount: p._count.votes,
+          likedByMe: p.votes.length > 0,
         }))}
         userId={userId}
         filter="favorites"
