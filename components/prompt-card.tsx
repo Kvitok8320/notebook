@@ -26,23 +26,33 @@ interface PromptCardProps {
     updatedAt: Date
     likesCount?: number
     likedByMe?: boolean
+    ownerId?: string
+    owner?: {
+      id: string
+      name?: string | null
+      email: string
+    }
   }
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
-  onTogglePublic: (id: string) => void
-  onToggleFavorite: (id: string) => void
+  userId: string
+  onEdit?: (id: string) => void
+  onDelete?: (id: string) => void
+  onTogglePublic?: (id: string) => void
+  onToggleFavorite?: (id: string) => void
 }
 
 export function PromptCard({
   prompt,
+  userId,
   onEdit,
   onDelete,
   onTogglePublic,
   onToggleFavorite,
 }: PromptCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const isOwner = prompt.ownerId === userId || !prompt.ownerId
 
   const handleDelete = async () => {
+    if (!onDelete) return
     if (!confirm("Вы уверены, что хотите удалить этот промт?")) {
       return
     }
@@ -60,32 +70,41 @@ export function PromptCard({
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg flex-1 min-w-0 pr-2">{prompt.title}</CardTitle>
           <div className="flex gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onToggleFavorite(prompt.id)}
-              className={`h-8 w-8 ${prompt.isFavorite ? "text-yellow-500" : ""}`}
-            >
-              <Star
-                className={`h-4 w-4 ${prompt.isFavorite ? "fill-current" : ""}`}
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onTogglePublic(prompt.id)}
-              className="h-8 w-8"
-            >
-              {prompt.isPublic ? (
-                <Globe className="h-4 w-4 text-blue-500" />
-              ) : (
-                <Lock className="h-4 w-4" />
-              )}
-            </Button>
+            {isOwner && onToggleFavorite && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onToggleFavorite(prompt.id)}
+                className={`h-8 w-8 ${prompt.isFavorite ? "text-yellow-500" : ""}`}
+              >
+                <Star
+                  className={`h-4 w-4 ${prompt.isFavorite ? "fill-current" : ""}`}
+                />
+              </Button>
+            )}
+            {isOwner && onTogglePublic && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onTogglePublic(prompt.id)}
+                className="h-8 w-8"
+              >
+                {prompt.isPublic ? (
+                  <Globe className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <Lock className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
         {prompt.description && (
           <p className="text-sm text-muted-foreground mt-2">{prompt.description}</p>
+        )}
+        {!isOwner && prompt.owner && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Автор: {prompt.owner.name || prompt.owner.email}
+          </p>
         )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pb-3">
@@ -113,28 +132,30 @@ export function PromptCard({
                 />
               )}
             </div>
-            <div className="flex gap-1 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(prompt.id)}
-                className="h-8 px-2 text-xs"
-              >
-                <Pencil className="h-3 w-3 mr-1.5" />
-                <span className="hidden sm:inline">Редактировать</span>
-                <span className="sm:hidden">Изменить</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3 mr-1.5" />
-                Удалить
-              </Button>
-            </div>
+            {isOwner && onEdit && onDelete && (
+              <div className="flex gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(prompt.id)}
+                  className="h-8 px-2 text-xs"
+                >
+                  <Pencil className="h-3 w-3 mr-1.5" />
+                  <span className="hidden sm:inline">Редактировать</span>
+                  <span className="sm:hidden">Изменить</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3 mr-1.5" />
+                  Удалить
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

@@ -32,6 +32,12 @@ interface Prompt {
   }
   likesCount?: number
   likedByMe?: boolean
+  ownerId?: string
+  owner?: {
+    id: string
+    name?: string | null
+    email: string
+  }
 }
 
 interface PromptsListProps {
@@ -40,6 +46,7 @@ interface PromptsListProps {
   filter: "all" | "public" | "favorites"
   search?: string
   sort?: string
+  showCreateButton?: boolean
 }
 
 export function PromptsList({
@@ -48,6 +55,7 @@ export function PromptsList({
   filter,
   search: initialSearch = "",
   sort: initialSort = "recent",
+  showCreateButton = true,
 }: PromptsListProps) {
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts)
   const [search, setSearch] = useState(initialSearch)
@@ -175,10 +183,12 @@ export function PromptsList({
             </Button>
           </div>
         )}
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Создать промт
-        </Button>
+        {showCreateButton && (
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Создать промт
+          </Button>
+        )}
       </div>
 
       {prompts.length === 0 ? (
@@ -196,6 +206,7 @@ export function PromptsList({
             <PromptCard
               key={prompt.id}
               prompt={prompt}
+              userId={userId}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onTogglePublic={handleTogglePublic}

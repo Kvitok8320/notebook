@@ -26,11 +26,10 @@ export default async function PublicPromptsPage({
     })
   }
 
-  // Получаем публичные промты пользователя с лайками
+  // Получаем ВСЕ публичные промты от всех пользователей с лайками
   let prompts = await prisma.prompt.findMany({
     where: {
-      ownerId: userId,
-      isPublic: true,
+      isPublic: true, // Убрали фильтр по ownerId - показываем все публичные промты
       ...(search && {
         OR: [
           { title: { contains: search, mode: "insensitive" } },
@@ -41,6 +40,13 @@ export default async function PublicPromptsPage({
     },
     include: {
       category: true,
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
       _count: {
         select: {
           votes: true,
@@ -78,9 +84,9 @@ export default async function PublicPromptsPage({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Публичные промты</h1>
+        <h1 className="text-3xl font-bold">Все публичные промты</h1>
         <p className="text-muted-foreground">
-          Промты, доступные для всех пользователей
+          Публичные промты от всех пользователей
         </p>
       </div>
       <PromptsList
@@ -90,11 +96,14 @@ export default async function PublicPromptsPage({
           updatedAt: new Date(p.updatedAt),
           likesCount: p._count.votes,
           likedByMe: p.votes.length > 0,
+          ownerId: p.ownerId,
+          owner: p.owner,
         }))}
         userId={userId}
         filter="public"
         search={search}
         sort={sort}
+        showCreateButton={false}
       />
     </div>
   )
