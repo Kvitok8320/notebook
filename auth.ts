@@ -17,18 +17,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/api/auth/error",
   },
   session: {
-    strategy: "database",
+    strategy: "jwt", // Используем JWT для работы в Edge Runtime (middleware)
     maxAge: 30 * 24 * 60 * 60, // 30 дней
     updateAge: 24 * 60 * 60, // обновлять каждый день
   },
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id
+    async session({ session, token }) {
+      // При JWT стратегии user данные приходят из token
+      if (session.user && token) {
+        session.user.id = token.id as string
       }
-      // Логирование для отладки на Vercel
+      // Логирование для отладки
       console.log("[Auth] Session callback:", { 
-        userId: user?.id, 
+        userId: token?.id, 
         email: session.user?.email,
         hasSession: !!session 
       })
@@ -58,11 +59,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true
     },
     async jwt({ token, user, account, profile }) {
-      // Этот callback вызывается для JWT стратегии, но у нас database стратегия
-      // Оставляем для совместимости
+      // При первом входе user содержит данные из OAuth
+      // PrismaAdapter автоматически создаст пользователя и вернет user.id
       if (user) {
         token.id = user.id
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
+        console.log("[Auth] JWT callback: Setting user data in token", { 
+          userId: user.id,
+          email: user.email 
+        })
       }
+      
       return token
     },
     async redirect({ url, baseUrl }) {
