@@ -52,16 +52,16 @@ export function PromptCard({
   const hasMore = prompt.content.length > 150
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">{prompt.title}</CardTitle>
-          <div className="flex gap-1">
+    <Card className="hover:shadow-md transition-shadow flex flex-col h-full overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-lg flex-1 min-w-0 pr-2">{prompt.title}</CardTitle>
+          <div className="flex gap-1 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onToggleFavorite(prompt.id)}
-              className={prompt.isFavorite ? "text-yellow-500" : ""}
+              className={`h-8 w-8 ${prompt.isFavorite ? "text-yellow-500" : ""}`}
             >
               <Star
                 className={`h-4 w-4 ${prompt.isFavorite ? "fill-current" : ""}`}
@@ -71,6 +71,7 @@ export function PromptCard({
               variant="ghost"
               size="icon"
               onClick={() => onTogglePublic(prompt.id)}
+              className="h-8 w-8"
             >
               {prompt.isPublic ? (
                 <Globe className="h-4 w-4 text-blue-500" />
@@ -81,40 +82,44 @@ export function PromptCard({
           </div>
         </div>
         {prompt.description && (
-          <p className="text-sm text-muted-foreground">{prompt.description}</p>
+          <p className="text-sm text-muted-foreground mt-2">{prompt.description}</p>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="flex-1 flex flex-col pb-3">
+        <div className="flex-1 space-y-3">
           <div className="text-sm text-muted-foreground">
             <MessageSquare className="h-4 w-4 inline mr-1" />
             {preview}
             {hasMore && "..."}
           </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
+        </div>
+        <div className="mt-4 pt-3 border-t">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
               Обновлено{" "}
               {formatDistanceToNow(new Date(prompt.updatedAt), {
                 addSuffix: true,
               })}
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-1 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(prompt.id)}
+                className="h-8 px-2 text-xs"
               >
-                <Pencil className="h-3 w-3 mr-1" />
-                Редактировать
+                <Pencil className="h-3 w-3 mr-1.5" />
+                <span className="hidden sm:inline">Редактировать</span>
+                <span className="sm:hidden">Изменить</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="text-destructive hover:text-destructive"
+                className="h-8 px-2 text-xs text-destructive hover:text-destructive"
               >
-                <Trash2 className="h-3 w-3 mr-1" />
+                <Trash2 className="h-3 w-3 mr-1.5" />
                 Удалить
               </Button>
             </div>
