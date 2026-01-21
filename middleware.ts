@@ -10,14 +10,9 @@ export default auth((req: NextRequest & { auth?: any }) => {
   console.log("[Middleware] Path:", pathname, "Auth:", !!req.auth, "User:", req.auth?.user?.email)
 
   // Исключаем API routes и статические файлы из проверки
-  if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next()
-  }
-
-  // Если это callback от OAuth, пропускаем без проверки
   // NextAuth сам обработает callback и установит сессию
-  if (pathname.startsWith("/api/auth/callback")) {
-    console.log("[Middleware] OAuth callback detected, allowing through")
+  if (pathname.startsWith("/api/auth")) {
+    console.log("[Middleware] API auth route, allowing through:", pathname)
     return NextResponse.next()
   }
 
@@ -29,8 +24,15 @@ export default auth((req: NextRequest & { auth?: any }) => {
 
   // Если пользователь уже на странице логина и авторизован, редиректим на dashboard
   if (pathname === "/login" && isLoggedIn) {
-    console.log("[Middleware] User logged in, redirecting to dashboard")
+    console.log("[Middleware] User logged in, redirecting from /login to /dashboard")
+    console.log("[Middleware] User details:", { id: req.auth?.user?.id, email: req.auth?.user?.email })
     return NextResponse.redirect(new URL("/dashboard", req.url))
+  }
+  
+  // Если это /login и пользователь не авторизован, разрешаем доступ
+  if (pathname === "/login" && !isLoggedIn) {
+    console.log("[Middleware] Allowing access to /login (user not logged in)")
+    return NextResponse.next()
   }
 
   // Если пытается зайти на защищенный маршрут без авторизации
